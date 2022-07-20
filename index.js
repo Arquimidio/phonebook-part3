@@ -1,13 +1,13 @@
+require('dotenv').config();
 const express = require('express');
 const app = express();
 const morgan = require('morgan');
-const PORT = process.env.PORT || 3001;
-const personsRouter = require('./routes/personsRouter');
 const cors = require('cors');
+const personsRouter = require('./routes/personsRouter');
+const { errorHandler, unknownEndPoint } = require('./errorHandling/errorHandler')
+const PORT = process.env.PORT || 3001;
 
-const unknownEndPoint = (req, res) => {
-    res.status(404).json({ error: 'unknown endpoint' });
-}
+
 
 morgan.token('data', (req, res) => JSON.stringify(req.body));
 app.use(express.static('./build'))
@@ -21,3 +21,4 @@ app.use(personsRouter);
 app.listen(PORT, console.log(`Listening at ${PORT}`));
 
 app.use(unknownEndPoint);
+app.use(errorHandler);

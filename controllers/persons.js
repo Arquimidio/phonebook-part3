@@ -1,29 +1,7 @@
-let persons = [
-    { 
-      "id": 1,
-      "name": "Arto Hellas", 
-      "number": "040-123456"
-    },
-    { 
-      "id": 2,
-      "name": "Ada Lovelace", 
-      "number": "39-44-5323523"
-    },
-    { 
-      "id": 3,
-      "name": "Dan Abramov", 
-      "number": "12-43-234345"
-    },
-    { 
-      "id": 4,
-      "name": "Mary Poppendieck", 
-      "number": "39-23-6423122"
-    }
-]
+const Person = require('../models/person');
 
-const generateId = () => Math.floor(Math.random() * 100000)
-
-const getInfo = (req, res) => {
+const getInfo = async (req, res) => {
+    const persons = await Person.find({});
     const personsCount = persons.length;
     const date = new Date();
     res.status(200).send(`
@@ -32,41 +10,55 @@ const getInfo = (req, res) => {
     `)
 }
 
-const getAll = (req, res) => {
+const getAll = async (req, res) => {
+    const persons = await Person.find({});
     res.status(200).json(persons);
 }
 
-const getSingle = (req, res) => {
-    const id = Number(req.params.id);
-    const found = persons.find(person => person.id === id);
-    if(found){
-        res.status(200).json(found);
-    }else{
-        res.status(404).end();
-    }
-}
-
-const create = (req, res) => {
-    const { body } = req;
-    const duplicate = persons.find(person => person.name === body.name);
-
-    if(!body.name || !body.number){
-        res.status(400).json({ error: "please provide name and number" });
-    }else if(duplicate){
-        res.status(400).json({ error: "name must be unique" });
-    }else{
-        const newPerson = {
-            ...body,
-            id: generateId()
+const getSingle = async (req, res, next) => {
+    try{
+        const { id } = req.params;
+        const singlePerson = await Person.find({ _id: id });
+        if(singlePerson.length){
+            res.status(200).json(singlePerson);
+        }else{
+            res.status(404).end();
         }
-        persons = persons.concat(newPerson);
-        res.status(200).json(newPerson);
+    }catch(err){
+        next(err);
     }
 }
 
-const deleteSingle = (req, res) => {
-    const id = Number(req.params.id);
-    persons = persons.filter(person => person.id !== id);
+const create = async (req, res, next) => {
+    try{
+        const { body } = req;
+        const newPerson = await new Person({...body}).save();
+        res.status(200).json(newPerson);
+    }catch(error){
+        next(error);
+    }
+    
+}
+
+const update = async (req, res) => {
+    const { id } = req.params;
+    const { name, number } = req.body;
+    const updatedPerson = { name, number };
+    try{
+        const returnedPerson = await Person.findByIdAndUpdate(
+            id, 
+            updatedPerson, 
+            { new: true, runValidators: true, context: 'query' }
+        );
+        res.status(200).json(returnedPerson);
+    }catch(error){
+        next(error);
+    }
+}
+
+const deleteSingle = async (req, res) => {
+    const { id } = req.params;
+    await Person.findByIdAndRemove(id);
     res.status(204).end();
 }
 
@@ -75,5 +67,6 @@ module.exports = {
     getAll,
     getSingle,
     create,
+    update,
     deleteSingle
 }
