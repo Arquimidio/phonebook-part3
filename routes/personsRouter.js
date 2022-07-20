@@ -3,15 +3,15 @@ const router = express.Router();
 const { getInfo, getAll, getSingle, create, update, deleteSingle } = require('../controllers/persons');
 
 router.route('/info')
-      .get(getInfo)
+	.get(getInfo);
 
 router.route('/api/persons')
-      .get(getAll)
-      .post(create)
+	.get(getAll)
+	.post(create);
 
 router.route('/api/persons/:id')
-      .get(getSingle)
-      .put(update)
-      .delete(deleteSingle)
+	.get(getSingle)
+	.put(update)
+	.delete(deleteSingle);
 
 module.exports = router;
